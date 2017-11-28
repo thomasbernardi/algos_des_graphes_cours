@@ -1,0 +1,628 @@
+% Thomas Bernardi
+% University of Washington
+% HLIN501 Study Guide
+% November 2017
+
+\documentclass[french]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage[noend]{algorithmic}
+\usepackage{amsmath, amsfonts, amsthm, amssymb} 
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definiton}[subsection]
+\newtheorem{theorem}{Theorem}[section]
+\title{Algorithmique des Graphes}
+\date{novembre 2017}
+\author{Thomas Bernardi}
+
+\begin{document}
+	\maketitle
+	\begin{center}	
+		\textit{Everything is a lie, nothing is real.} \\
+	\end{center}
+
+		\tableofcontents
+		\newpage
+		\section{Graphes: Definitions de base}
+
+		\begin{definition}{Graphe}
+			Un graphe $G = (V, E)$ est constitué
+			\begin{itemize}
+				\item d'un ensemble de sommets $V$ de taille $n$
+				\item d'un ensemble d'arêtes $E$ constitué de paires d'éléments de taille $m$
+			\end{itemize}
+		\end{definition}
+
+		\subsection{Graphes Speciaux}
+		Il y a plusieurs graphes speciaux qui sont d'une façon ou une autre regulières, y compris les graphes suivants:
+			\begin{enumerate}
+				\item $\mathbf{P_k}$: le chemin de longeur $k$
+				\item $\mathbf{C_k}$: le cycle de longeur $k$
+				\item $\mathbf{K_k}$: le graphe complet sur $k$ sommets, c'est à dire que tous les sommets sont connectés à tous les autres
+			\end{enumerate}
+			
+		Des graphes peuvent aussi être classifiés en fonction de comment ils peuvent être divisés:
+
+		\begin{definition}{\textit{Stable:}}
+			un graphe fait seulement de sommets, il n'y a aucune arête.
+		\end{definition}
+		\
+		\begin{definition}{\textit{Couplage:}}
+			un couplage est un graphe dont chaque sommet est relié à \textit{exactement} un autre (pas plus, pas moins)
+		\end{definition}
+		\
+		\begin{definition}{\textit{Graphe Biparti:}}
+			un graphe est dit \textit{biparti} quand il peut être divisé en deux groupes de sommets où chaque groupe est un stable en soi-même-\textit{bref:} s'il y a une partition de ses sommets en 2 stables
+		\end{definition}
+		\
+		\begin{definition}{\textit{Arbre:}}
+			un arbre est un graphe \textit{sans cycle}, et pour être un \textit{arbre} et non un chemin, il faut au moins 2 feuilles
+		\end{definition}
+
+		\subsection{Codage}
+		Puisque on s'interesse aux algorithmes concernants les graphes, il faut une façon \textit{d'encoder} un graphe alors que l'on puisse l'utiliser et le manipuler.
+		
+		\textbf{Les sommets:} les sommets sont toujours encodeé par une liste de sommets
+
+		\textbf{Les arêtes:} il y a plusieurs méthodes pour encoder les arêtes:
+
+		\begin{tabularx}{\textwidth}{| X || X | X | X |}
+			\hline
+			& \textbf{liste d'arêtes} & \textbf{liste de voisins} & \textbf{matrice d'adjences} \\
+			\hline
+			\hline
+			\textbf{taille du codage} & $O(m)$ & $O(m + n)$ & $O(n^2)$ \\
+			\hline
+			\textbf{temps pour chercher une arête} & $O(m)$ - $O(\log 	m)$ si la liste est triée & $O(n)$ - $O(\log n)$ si la liste est triée & $O(1)$ \\
+			\hline
+			\textbf{temps pour chercher un sommet} & $O(m)$ & $O(|L(x)|)$ & $O(n)$ \\
+			\hline
+	\end{tabularx} \\
+
+		\subsection{Degré}
+
+		\begin{definition}{\textit{Degré}} Chaque sommet dans un graphe a un degré. Noté $d_G(v)$, le degrê d'un sommet $v \in V$ est le nombre de voisins qu'il admet (qui équivaut au nombre d'arêtes qu'il admet).
+		\end{definition}
+		\
+		\begin{definition}{\textit{Graphe k-régulier}} un graphe \textit{k-régulier} est un graphe dont tous les sommets sont de degré $k$. Autrement dit: $\forall v \in V, d_G(v) = k $. Si on sait $|V|$ et $|E|$ d'un graphe régulier, on peut trouver $k$ avec le formule suivant: $2*\frac{|E|}{|V|}$. 
+		\end{definition}
+
+		Un formule, applicable à tout graphe, et qui peut être utile de temps en temps est le suivant: $$\sum_{v \in V}{d_G(v)} = 2|E|$$.
+
+		\subsection{Connexité}
+
+		Pour parler de connexité, il faut quelques définitions:
+		\\
+		\begin{definition}{\textit{Marche}}
+			une \textit{marche} est une serie d'arêtes qui lie deux sommets.
+		\end{definition}
+		\
+		\begin{definition}{\textit{Chemin}}
+			un \textit{chemin} est une \textit{marche} particulière dans laquelle on ne passe pas plus qu'une fois par un sommet (et alors il n'y a pas de cycle)
+		\end{definition}
+		\
+		Et maintenant on peut passer à l'idée de connexité: 
+		\\
+		\begin{definition}{\textit{Connexe}}
+			un graphe (ou une composante) est dit \textit{connexe} ssi $\forall x,y \in V$ il existe une marche de $x$ à $y$. C'est à dire que, dans un graphe ou une composante connexe, tout sommet est accessible de tout autre sommet.
+		\end{definition}
+		\
+		Un graphe peut admettre plusieurs \textbf{composantes connexes} et si ces composantes sont \textbf{disjoints} le graphe lui-même n'est pas connexe (deux composantes disjoints ne sont pas lié). Et alors on peut dire que \textit{tous les graphes sont des unions disjointes de leurs composantes connexes}.
+
+		\subsection{L'algorithme COMPOSANTE}
+		Cet algorithme nous permet d'identifier le composantes connexes d'un graphe. \textbf{Sa complexité est} $\mathbf{O(n^2)}$ mais il y a une version opimisée dont la complexité est $O(m + n \log n)$. Voici l'algo:
+		\begin{algorithmic}[1]
+			\FORALL{$x \in V$} 
+			\STATE{$\text{comp}(x) \leftarrow x$}
+			\ENDFOR
+			\FORALL{$xy \in E$}
+				\IF{$\text{comp}(x) \neq \text{comp}(y)$}
+				\STATE{$\text{aux} \leftarrow \text{comp}(x)$}
+				\FORALL{$z \in V$}
+					\IF{$\text{comp}(z) = \text{aux}$}
+					\STATE{$\text{comp}(z) \leftarrow \text{comp}(y)$}
+					\ENDIF
+				\ENDFOR
+				\ENDIF
+			\ENDFOR
+		\end{algorithmic}
+		
+		Plus intuitivement, l'idée de cet algorithme est de commencer avec chaque sommet dans sa propre composante. Puis, on itère sur les arêtes et pour chacune, on fusionne les composantes auquelles les extremités de cette arête.
+
+		\section{Arbres Couvrants}
+		
+		\subsection{Arbres en général}
+		\begin{definition}{\textit{Arbre}}
+			un graphe $T = (V, A)$ est dit \textit{un arbre} ss'il est \textit{connexe} est \textit{sans cycle}.
+		\end{definition}
+		\
+		Un fait qui peut être util est le suivant:\\
+
+		\begin{theorem}{Un arbre sur $n$ sommets contient $n - 1$ arêtes}
+			\begin{proof}
+				On poursuit par récursion:\\
+				\textbf{Cas de bas:}
+				Si $n = 1$ on peut pas avoir d'arêtes, alors $|N| = 0$.\\
+				\\
+				\textbf{Cas récursif}
+				Maintenant, supposons que tous les arbres à $n$ sommets possèdent la propriété en question, et soit $T = (V, E)$ un graphe à $n + 1$ sommets. $T$ possède une feuille $f$ et $T \setminus \{f\}$ est un arbre sur $n$ sommets (est par hypothèse possède la propriété en question). Alors, puisque $T \setminus \{f\}$ possède $n - 1$ arêtes, $T$ possède $(n - 1) + 1 = n$ arêtes (une arête de plus pour connecter $f$ au graphe).
+			\end{proof} 
+		\end{theorem}
+		\begin{definition}{\textit{Feuille}}
+			un sommet $v$ d'un arbre $T$ de degré $1$ est une \textit{feuille} de $T$. Notez, un arbre a toujours au moins une feuille.
+		\end{definition}
+		\
+		\begin{theorem}{Tout arbre ayant au moins 2 sommets a au moins 2 feuilles:}
+			\begin{proof}
+				Soit $T = (V, A)$ un arbre ayant au moins $2$ sommets. Soient $C = v_1, v_2, \dots , v_n$ un chemin maximal (inextensible) dans $T$. Puisque $C$ est maximal, $v_1$ n'a pas d'autre voisin que $v_2$ et alors $v_1$ est de degré $1$ donc $v_1$ est une feuille.
+
+				Puisque $|V| \geq 2$, $v_1 \neq v_t$ et alors, de même que $v_1$, $v_t$ est une feuille unique de $v_1$. Alors on a trouvé $2$ feuilles dans $T$.
+			\end{proof}
+		\end{theorem}
+		\
+		\begin{theorem}{Si $f$ est une feuille d'un arbre $T$, $T \setminus \{f\}$ est encore un arbre.}
+			\begin{proof}
+				Soit $T = (V, A)$ un arbre. Soit $f \in A$ une feuille de $T$. Puisque $T$ est un arbre, $T$ et connexe est sans cycle. En supprimant $f$, puisque $f$ est feuille et alors a degré $1$, on obtient un graphe qui est encore connexe--on n'a supprimé qu'une seule arête qui a lié $f$ et $T \setminus \{f\}$. Donc, $T \setminus \{f\}$ est connexe. Puisque l'on a supprimé une arête, on n'aurait pas pu ajouter un cycle, et alors $T \setminus \{f\}$ est sans cycle. En étant connexe et sans cycle, $T \setminus \{f\}$ est alors un arbre. 
+			\end{proof}
+		\end{theorem}
+		\
+		\begin{definition}{\textit{Forêt}} une \textit{forêt} est une union disjointe d'arbres.
+		\end{definition}
+		\
+		\begin{theorem}{Un graphe $G = (V, E)$ est une forêt $\leftrightarrow$ il ne possède pas de cycles}
+			\begin{proof}
+				\
+				
+				$\leftarrow$ Si $G$ est sans cycle, chaque de ses composantes connexes est sans cycle, et donc un arbre. Alors, $G$ est une union disjointe d'arbres.\\
+				$\to$ Immédiat
+			\end{proof}
+		\end{theorem}\qed
+		\
+		\begin{theorem}{Une forêt à $n$ sommets ayant $c$ composantes connexes possède $n - c$ arêtes.}
+			\begin{proof}
+				On note $n_1, n_2, \dots , n_c$ la taille (nombre de sommets) de chacune des composantes. On observe: $n_1 + n_2 + \dots + n_c = n$. Prenant chacune des composantes de taille $t$ on note qu'elle admet $t - 1$ arêtes. Alors pour calculer le nombre $m$ d'arêtes du forêt:
+				\begin{center}
+					\begin{align*}
+						(n_1 - 1) + (n_2 - 1) + \dots + (n_c - 1) & = c*(-1) + (n_1 + n_2 + \dots + n_c)\\
+						& = c*(-1) + n\\
+						& = n - c
+					\end{align*}
+				\end{center}
+			\end{proof}
+		\end{theorem}
+		\subsection{Arbres Couvrants}
+		\begin{definition}{\textit{Arbre couvrant}}
+			Soit $G = (V, E)$ un graphe connexe et $T = (U, F)$ un arbre. $T$ est un \textit{arbre couvrant} ssi $U = V$. Autrement dit, un arbre couvrant d'un graphe, est un arbre qui touche tous les sommets du graphe.
+		\end{definition}
+		\
+		L'idée d'un \textbf{arbre couvrant} se révèle util parce qu'il nous permet de dire beaucoup de choses à propos d'un graphe grâce au theorem suivant:
+		\\
+		\begin{theorem}{Un graphe $G$ est connexe, ss'il admet un arbre couvrant}\\
+			$\to$ Ayant un arbre couvrant $T = (V', E')$ implique que $\forall x,y \in V'$ il existe un chemin de $x$ à $y$. \\ \\
+			$\leftarrow$ Supposons $G$ connexe. Il y a 2 cas: \\
+			\begin{enumerate}
+				\item Si $G$ n'a pas de cycle, alors $G$ est un arbre et admet un arbre couvrant.
+				\item Supposons que $G$ possède un cycle $x_0, x_1, \dots,x_n,x_0$. Si on supprime l'arête $x_0x_1$, $G$ reste connexe.
+				Alors, on peut supprimer des arêtes qui se trouvent dans des cycles jusqu'à ce que le graphe n'ait pas de cycles, toujours en conservant son connexité. Dès qu'il y a pas de cycle, on a reduit le graphe au cas 1.
+			\end{enumerate}
+		\end{theorem}
+		\qed
+
+		\subsection{Un algorithme pour calculer des arbres couvrants}
+		Cet algorithme est presque pareil de l'algorithme ``composante'' mais on construit un arbre au même temps de fusionner nos composantes. On ajoute une arête seulement si ses deux extremités ne sont pas dans la même composante. \textbf{la complexité de cet algorithme est} $\mathbf{O(n^2)}$.
+
+		\begin{algorithmic}[1]
+			\STATE{\underline{$A \leftarrow \emptyset$}}
+			\FORALL{$x \in V$} 
+			\STATE{$\text{comp}(x) \leftarrow x$}
+			\ENDFOR
+			\FORALL{$xy \in E$}
+				\IF{$\text{comp}(x) \neq \text{comp}(y)$}
+				\STATE{$\text{aux} \leftarrow \text{comp}(x)$}
+				\STATE{\underline{$A \leftarrow A \cup \{xy\}$}}
+				\FORALL{$z \in V$}
+					\IF{$\text{comp}(z) = \text{aux}$}
+					\STATE{$\text{comp}(z) \leftarrow \text{comp}(y)$}
+					\ENDIF
+				\ENDFOR
+				\ENDIF
+			\ENDFOR
+			\RETURN{\underline{$A$}}
+		\end{algorithmic}
+
+		\subsection{Arbres couvrants de poids minimum}
+		\begin{definition}{\textit{Arbre couvrant de poids minimum (ACPM)}} Si notre graphe $G = (V, E)$ a des poids sur les arêtes (une fonction $P \to \mathbb{R}^+$), on s'interesse à trouver non seulement un arbre couvrant, mais un arbre couvrant dont le poids est minimum. Donc, un \textit{arbre couvrant de poids minimum} est un arbre \textit{couvrant} $T = (V', E')$ tel que $w(T) = \sum_{a \in E'}{P(a)}$ soit minimum.
+		\end{definition}
+
+		\subsubsection{Un algorithme pour calculer un ACPM (celui de Kruskal)}
+
+		L'algorithme de Kruskal est presque pareil de l'algorithme pour trouver un arbre couvrant, sauf que l'on itère sur les éléments par \textit{ordre de poids croissint}. Avec le tri des arêtes on ajoute $O(m \log n$ à notre complexité. Alors, \textbf{la complexite de l'algorithme de Kruskal est} $\mathbf{O(n^2 + m \log n)}$ (et en version optimisé $O(m \log n)$. Les changements sont soulignés:
+		\\
+		\begin{algorithmic}
+			\STATE{\underline{Trier les arêtes de $G$ par ordre de poids croissant}}
+			\STATE{$A \leftarrow \emptyset$}
+			\FORALL{$x \in V$} 
+			\STATE{$\text{comp}(x) \leftarrow x$}
+			\ENDFOR
+			\FORALL{$xy \in E$, \underline{en suivant l'ordre précédemment calculé}}
+				\IF{$\text{comp}(x) \neq \text{comp}(y)$}
+				\STATE{$\text{aux} \leftarrow \text{comp}(x)$}
+				\STATE{$A \leftarrow A \cup \{xy\}$}
+				\FORALL{$z \in V$}
+					\IF{$\text{comp}(z) = \text{aux}$}
+					\STATE{$\text{comp}(z) \leftarrow \text{comp}(y)$}
+					\ENDIF
+				\ENDFOR
+				\ENDIF
+			\ENDFOR
+			\RETURN{$A$}
+		\end{algorithmic}
+
+		\subsubsection{Technique de preuves avec les ACPM}
+		Pour les preuves concernants les ACPM, on fait toujours le même démarche:
+		\begin{enumerate}
+			\item ajoutez une arête
+			\item trouver un cycle
+			\item enlever une arête qui fait parti du cycle et comparer les deux arbres couvrants
+		\end{enumerate}\
+
+		\begin{theorem} Soit $G = (V, E)$ un graphe connexe et $T = (V, A)$ un ACPM de ce graphe. Pour toute coupe $C$ et toute arête $e \in E$ traversant $C$ (c'est à dire, toute arête \textit{dans le graphe} qui traverse $C$, il existe $a \in A$ (dans l'ACPM) traversant $C$ telle que $\omega(a) \leq \omega(e)$.
+			\begin{proof}
+				Supposons $T$ quelconque (mais bien ACPM). Soit $C$ une coupe de G. Il y a deux cas:
+				\begin{enumerate}
+					\item Il n'y a qu'une arête traversant $C$. Dans ce cas, il est immédiat qu'avec $e \in E$ la seule arête traversant $C$ que $e \in A$ et alors $a = e \to \omega(a) \leq \omega(e)$.
+					\item Il y a plusieurs $e \in E$ traversant $C$. On procède par l'absurde: Supposons que $\forall e \in E$ traversant $C$, $\forall a \in A$ traversant $C$, $\omega(a) \nleq \omega(e)$ c'est à dire $\omega(a) > \omega(e)$. On crée $T' = (V, A \cup \{e_1\})$ tel que $e_1 \in E$ traverse $C$. On a créé une boucle sur la coupe. On peut, ensuite créer $T'' = (V, A \cup \{e_1\} \setminus \{a_1\}$ tel que $a_1 \in A$ traversant $C$. $T''$ est encore un arbre couvrant. Puisque (par hypothèse absurde) $\omega(a_1) > \omega(e_1)$, $\omega(T'') < \omega(T)$ qui contredit $T$ comme ACPM. Alors, $\forall e \in E$ traversant $C$, $\exists a \in A$ traversant $C$ telle que $\omega(a) \leq \omega(e)$.
+				\end{enumerate}
+			\end{proof}
+		\end{theorem}
+		\subsubsection{Un 2 approximation du problem du voyageur du commerce}
+
+		\section{Parcours}
+
+		\begin{definition}{\textit{parcours}}
+			un \textit{parcours} d'un graphe est une certaine façon, quelconque, d'explorer les sommets d'un graphe. On peut representer un parcours avec une \textit{énumeration des sommets} ($v_1, v_2, ... , v_n$) qui donne l'ordre du parcours, et une fonction père ($v \to v$) telle que
+			\begin{itemize}
+				\item $\text{père}(v_1) = v_1$
+				\item $\text{père}(v_i) \in \{v_1, ... , v_i\}$
+				\item $v_i \to \text{père}(v_i) \in E$
+			\end{itemize}
+
+			Avec le fonction père et une racine on peut construire l'arbre de parcours, qui est aussi un arbre couvrant du graphe.
+		\end{definition}
+		\
+		\begin{definition}{\textit{plus court chemin (PCC)}}
+			un \textit{plus court chemin} entre $x$ et $y$ est un chemin entre les deux arêtes ayant le plus petit nombre d'arêtes possible.
+		\end{definition}
+		\
+		\begin{definition}{\textit{distance}}
+			dans un graphe $G$, de $x$ à $y$, notée $d_G(x, y)$, la \textit{distance} est le nombre d'arêtes d'un \textit{plus court chemin} entre $x$ et $y$.
+		\end{definition}
+
+		\subsection{Parcours en Largeur}
+		Soit $G = (V, E)$ un graphe. Pour trouver un plus court chemin depuis un sommet $r$ à n'importe quel autre sommet $x$ on peut trouver un \textit{arbre de plus courts chemins}.
+		\\
+		\begin{definition}{\textit{arbre de plus courts chemins (APCC)}}
+			Soit $G = (V, E)$ un graphe connexe et $r \in V$ une racine. Un \textit{arbre des plus courts chemins} de racine $r$ est un arbre couvrant $T = (V, A)$ de $G$ tel que $\forall x \in V, d_T(r, x) = d_G(r, x)$. Autrement dit, $\forall x \in V$, l'unique chemin de $r$ à $x$ dans $T$ est un \textit{plus court chemin} de $G$.
+		\end{definition}
+		\
+		Pour trouver un \textit{arbre de plus courts chemins} on déroule un \textit{parcours en largeur}. En déroulant un \textit{parcours en largeur}, on s'interesse du \textit{niveaux} des sommets (on explore tout un \textit{niveau} avant de continuer au prochain).\\
+		\begin{definition}{\textit{niveau}}
+			Dans un arbre $T = (V, A)$ enraciné de racine $r$ (pas forcément un APCC), $d_T(r, x)$ est dit le \textit{niveau} de $x$ dans $T$, noté $n_T(x)$.
+		\end{definition}
+		\
+		On a ci-dessous, quelques proprietés des \textit{APCC} utils:
+		\\
+		\begin{theorem}{un arbre enraciné $T = (V, A)$ est APCC $\leftrightarrow$ $\forall xy \in E, |n_T(x) - n_T(y)| \leq 1$}
+			\begin{proof}
+				$\rightarrow$ Soit $G = (V, E)$ un graphe connexe. Soit $T = (V, A)$ un APCC de $G$ enraciné en $r$. Soit $xy$ une arête de $G$. Au pire des cas, le PCC de $r$ à $y$ où $x$ admet cette arête. Alors, $d_G(r, y) \leq d_G(r, x) + 1$ (i.e. $y$ est plus distant de $r$ que $x$ et dans le pire des cas, le PCC vers $y$ passe par $x$). Comme $T$ est un APCC on a
+				\begin{align*}
+					n_T(y) & = d_G(r, y) && T \text{ est APCC} \\
+					& \leq d_G(r, x) + 1 \\
+					& \leq n_T(x) + 1 && T \text{ est APCC}
+				\end{align*}
+				Symmétriquement, $n_T(x) \leq n_T(y) + 1$.
+				\\
+				\\
+				$\leftarrow$ Soit $G = (V, E)$ un graphe connexe et $T = (V, A)$ un arbre couvrant de $G$ enraciné en $r$ tel que $\forall xy \in E, |n_T(x) - n_T(y)| \leq 1$. Soit $P$ un chemin de $r$ à $x$ quelconque dans $T$ de longeur $n_T(x)$. Soit maintenant un autre chemin $r = x_1, x_2, \dots , x_k = x$ de longeur $k - 1$. Puis on s'interesse à l'expression suivant: $( (n_T(x_2) - n_T(x_1)) + \dots + (n_T(x_k) - n_T(x_{k - 1})))$ dont chaque élément, par hypothèse, s'évalue au plus $1$. Alors cet expression s'évalue \textit{au plus} $k - 1$. De plus, on peut simplifier cet expression à $n_T(x_k) - n_T(x_1)$ alors $n_T(x_k) - n_T(x_1) \leq k - 1$. Puisque $x_1 = r$ et $n_T(r) = 0$, alors $n_T(x) \leq k - 1$. Donc, le longeur de $P$ est \textit{au moins} $n_T(x)$ et alors $T$ est un APCC.
+			\end{proof}
+		\end{theorem}
+		\
+		La propriété ci-dessus sera très utile pour le théorem suivant:\\
+		\begin{theorem}{pour tout graphe connexe $G$, et tout sommet $v$ de $G$, il existe un APCC enraciné en $v$}
+			\begin{proof}
+				Soit $G = (V, E)$ un graphe connexe. Choisissons $T = (V, A)$ un arbre enraciné en $v$ tel que $\sum_{x \in V}n_T(x)$ est minimum. Alors, donné le théorem ci-dessus, il suffit de montrer que $\forall xy \in E, | n_T(x) - n_T(y) | \leq 1$ et alors on est content que $T$ est APCC.\\
+				Par l'absurde: supposons $\exists xy \in A$ telle que $n_T(x) > n_T(y) + 1$. Dans $T' = (V, \{A \cup \{xy\}\} \setminus \{x\text{père}(x)\})$, $n_{T'}(x)$ est au plus $n_T(x) - 1$, contredisant le minimalité de $T$. (Effectivement, on a diminué le niveau de $x$ par au moins $1$). 
+			\end{proof}
+
+		\end{theorem}
+		
+		\subsubsection{Algorithme ``Parcours en largeur''}
+		\textbf{Cet algorithme a une complexité de} $\mathbf{O(n + m)}$.\\
+		En faisant un parcours en largeur, on gère quatre listes:
+		\begin{itemize}
+			\item $\text{dv}(x)$ ``déjà vu'' alors que l'on n'ajoute une arête qu'une fois au parcours
+			\item $\text{ordre}(x)$ l'ordre dans lequel les sommets sont ajoutés
+			\item $\text{père}(x)$ qui précise le père de chaque sommet
+			\item $\text{niveau}(x)$ qui précise le niveau de chaque sommet, c'est à dire sa distance du racine
+		\end{itemize}
+
+		Il faut aussi gérer une file $AT$ dont on prendra de la tête le prochain sommet à traiter.
+		\\
+		\begin{algorithmic}[1]
+			\FORALL{$v \in V$}
+				\STATE{$\text{dv}(x) \leftarrow 0$}
+			\ENDFOR
+			\STATE{$\text{dv}(r) \leftarrow 1, \text{ordre}(r) \leftarrow 1, \text{père}(r) \leftarrow r, \text{niveau}(r) \leftarrow 0$ // la racine}
+			\STATE{Enfiler $r$ dans $AT$}
+			\STATE{$t \leftarrow 2$}
+			\WHILE{$AT \neq \emptyset$}
+				\STATE{note $v$ le premier sommet de $AT$ et l'enlève de $AT$}
+				\FORALL{$x \in N(v)$}
+					\IF{$\text{dv}(x) = 0$}
+						\STATE{$\text{dv}(x) \leftarrow 1$}
+						\STATE{Enfiler $x$ dans $AT$ (en dernière position comme toute file)}
+						\STATE{$\text{ordre}(x) = t, t \leftarrow t + 1$}
+						\STATE{$\text{père}(x) \leftarrow v, \text{niveau}(x) \leftarrow \text{niveau}(x) + 1$}
+					\ENDIF
+				\ENDFOR
+			\ENDWHILE
+		\end{algorithmic}
+
+		L'idée du parcours en largeur est d'ajouter tous les voisins d'un sommet avant de visiter le prochain. Comme ça on crée des \textit{niveaux}. En ajoutant chaque sommet à une file, on assure que l'on va visiter \textit{tout un niveau} avant d'explorer le prochain.
+		\subsection{Parcours en Profondeur}
+		Contrairement au parcours en largeur, on ne s'interesse pas au niveaux dans le parcours en profondeur. On va descendre aussi fond que possible avant de remonter, et alors cet algorithme s'interesse aux suivants:
+		\begin{itemize}
+			\item $\text{dv}(x)$ ``déjà vu'' qui est utile pour le déroulement de l'algorithme
+			\item $\text{début}(x)$ date ou l'on descend par $x$
+			\item $\text{fin}(x)$ date ou l'on remonte par $x$
+			\item $\text{père}(x)$ pas forcément necessaire mais utile quand même
+		\end{itemize}
+		Cette fois, $AT$ sera géré comme une pile.
+		\\
+		\begin{algorithmic}
+			\FORALL{$v \in V$}
+				\STATE{$\text{dv}(x) \leftarrow 0$}
+			\ENDFOR
+			\STATE{$\text{dv}(r) \leftarrow 1, \text{début}(r) \leftarrow 1, \text{père}(r) \leftarrow r$ // la racine}
+			\STATE{$t \leftarrow 2$}
+			\WHILE{$AT \neq \emptyset$}
+				\STATE{Noter $v$ le sommet en haut de $AT$}
+				\IF{$N(v) = \emptyset$}
+					\STATE{Dépiler $AT$}
+					\STATE{$\text{fin}(x) \leftarrow t, t \leftarrow t + 1$}
+				\ELSE
+					\STATE{Noter $x$ le sommet en haut de $N(v)$ et dépiler $N(v)$}
+					\IF{$\text{dv}(x) = 0$}
+						\STATE{$\text{dv}(x) \leftarrow 1$}
+						\STATE{Empiler $x$ sur $AT$}
+						\STATE{$\text{début}(x) \leftarrow t, t \leftarrow t + 1$}
+						\STATE{$\text{père}(x) \leftarrow v$}
+					\ENDIF
+				\ENDIF
+			\ENDWHILE
+		\end{algorithmic}
+
+		En gros, on descend au fond, et puis on remonte jusqu'à ce que l'on puisse recommencer à descendre.
+		\subsection{Arbres Normaux}
+		Avant de voir ce que c'est un arbre normal, il faut des définitions qui, bien evidemment, seront utils:
+		\\
+		\begin{definition}{\textit{ancêtre}}
+			étant donné un arbre enraciné $G = (V, E)$ et une fonction père, $x$ est un \textit{ancêtre} de $y$ si $x$ est sur le plus court chemin entre $y$ et la racine.
+		\end{definition}
+		\
+		\begin{definition}{\textit{branche}} 
+				dans un arbre, ``une \textit{branche} issue de $x$'' est l'ensemble des sommets qui admettent $x$ comme \textit{ancêtre}.
+		\end{definition}
+		\
+		L'idée d'un arbre normal est un peu compliquée, et \textbf{elle n'est appliquable que quand on parle d'un arbre couvrant d'un graphe.} Alors, quand on parle d'un arbre couvrant, on peut se demander s'il est \textit{normal}. Mais qu'est-ce que ça veut dire exactement, \textit{normal}?
+		\\
+		\begin{definition}{\textit{arbre normal}}
+			En bref, un arbre couvrant $T$ d'un graphe quelconque $G = (V, E)$ est dit \textit{normal} quand toute arête de $G$ ne relie que des arêtes sur \textit{la même branche}. Plus précisément, $\forall xy \in E, x \in \text{branche}(y) \lor y \in \text{branche}(x)$.
+		\end{definition}
+		\
+		Mais, admettra-t-il, un graphe quelconque, forcément un arbre couvrant normal? C'est si bien que tu as demandé! \\
+		\begin{theorem}{\textit{Tout graphe connexe admet un arbre couvrant normal de racine arbitraire}}
+			\begin{proof}
+				Soit $G = (V, E)$ un graphe connexe. On choisit $T = (V, A)$ avec $\sum_{v \in V}n_T(v)$ maximum (c'est à dire, un graphe dont la somme des nivaux est le plus haut que possible). On veut montrer que l'arbre obtenu ($T$) est normal:\\
+				Par l'absurde: soit $xy$ une arête reliant 2 branches de $T$ avec $n_T(x) \geq n_T(y)$ (si ce n'est pas le cas on considère $yx$. Dans $T' = (V, \{E + xy\} \setminus \{y\text{père}(y)\})$ tous les sommets ont le même niveau que dans $T$ sauf les descendants de $y$. Ces sommets ont gagné au moins $1$ en niveau (si $n_T(x) = n_T(y)$ plus si $n_T(x) > n_T(y)$). Cela contredit le choix de $T$ (dont $\sum_{v \in V}n_T(v)$ est maximum) et alors il n'est pas possible d'avoir une arête $xy$ qui relie deux branches.
+			\end{proof}
+		\end{theorem}
+
+		\section{Graphes Orientés}
+		\subsection{Definitions}
+		\begin{definition}{\textit{graphe orienté}}
+			un \textit{graphe orienté} $D = (V, A)$ est formé de sommets $V$ et d'arcs $A$ qui sont des couples d'éléments distancts de $V$ (i.e. $xy \neq yx$).
+		\end{definition}
+		\
+		Il y a plusieurs façons d'encoder un graphe orienté. On encode les sommets toujours dans une liste de sommets. Les arcs peuvent être encodés comme suivant:
+		\begin{itemize}
+			\item liste des arcs
+			\item liste des voisins sortants pour chaque $x \in V$ (noté $N^+(x)$)
+			\item matrice d'adjacences
+		\end{itemize}
+		\begin{definition}{\textit{voisin intant}}
+			$x \to \mathbf{\underline{y}}$ - voisin auquel l'arc est orienté (quand $xy \in A$ $y$ est \textit{voisin intant} de $x$).
+		\end{definition}
+		
+		\begin{definition}{\textit{voisin entrant}}
+			$\mathbf{\underline{x}} \to y$ - voisin duquel l'arc est orienté (quand $xy \in A$ $x$ est \textit{voisin entrant} de $y$).
+		\end{definition}
+		
+		\begin{definition}{\textit{degré sortant}}
+			noté $d^+(x)$, le \textit{degré sortant} d'un sommet $x \in V$ est égal à $|N^+(x)|$
+		\end{definition}
+		
+		\begin{definition}{\textit{source}}
+			lorsque $d^-(x) = 0$, $x$ est une \textit{source} (qui n'a pas de \textit{voisin entrant})
+		\end{definition}
+		
+		\begin{definition}{\textit{puit}}
+			lorsque $d^+(x) = 0$, $x$ est un \textit{puit} (qui n'a pas de \textit{voisin intant})
+		\end{definition}
+
+		\subsection{Parcours}
+		Pour parcourir un graphe orienté ou en largeur ou en profondeur, on fait pareil qu'avec des graphes non-orientés mais en examinant $N^+(x)$ au lieu de $N(x)$. Autrement dit, on part d'une racine $r$ et on suit les arcs sortants. Si tous les sommets ne sont pas atteints, on peut relancer u parcours sur une nouvelle racine non encore atteinte.\\
+		\begin{definition}{\textit{arborescence orienté}} 
+			En faisant un parcours dans un graphe orienté on obtient une \textit{arborescence sortante}, un arbre $T = (V, A)$ enraciné en $r$ tel que $\forall x \in V, \exists$ chemin orienté de $r$ à $x$.
+		\end{definition}
+		\subsubsection{Parcours en largeur dans les graphes orientés}
+
+		Il ist bien possible qu'il y aura des sommets dans un graphe orienté qui sont pas dans un parcours de ce graphe. Ça peut arriver dans les 2 cas suivants:
+		\begin{enumerate}
+			\item 
+		\end{enumerate}
+		TODO
+		\subsubsection{Parcours en profondeur dans les graphes orientés}
+		TODO
+		\subsection{DAG: Directed Acyclic Graph / Graphe Orienté sans Cycle}
+		
+		\begin{theorem}{tout DAG possède une source}
+			\begin{proof}
+				Soit $G = (V, A)$ un DAG. Depuis un sommet $x_1 \in V$ quelconque, on construit un chemin maximal (c'est à dire que l'on ne peut pas étendre) dirigé vers $x_1$. Soit $x_1 \leftarrow x_2 \leftarrow \dots \leftarrow x_k$ un tel chemin. Le sommet $x_k$ n'a pas de voisin entrant à l'extérieur de $\{x_1, x_2, \dots , x_k\}$, (sinon le chemin ne serait pas maximal). De plus, $x_k$ ne peut pas être un fils d'un sommet dans $\{x_1, x_2, \dots , x_k\}$ qui voudrait dir qu'il y a un circuit (contraire à notre hypothèse). Alors, $x_k$ n'a pas de \textit{voisint entrant} et donc est une source.
+			\end{proof}
+		\end{theorem}
+		\
+		\begin{definition}{\textit{tritopologique}}
+			un \textit{tritopologique} d'un graphe $G = (V, A)$ est une énumeration $v_1 \to v_2 \to \dots \to v_k$ de tous les sommets de $G$ telle que $\forall v_iv_j \in A, i < j$.
+		\end{definition}
+		\
+		\begin{theorem}{$D$ est un DAG $\leftrightarrow$ $D$ admet un \textit{tritopologique}}
+			\begin{proof}
+				$\to$ Si $D$ est un DAG, il a une source $x_1$. $D \setminus \{x_1\}$ est un DAG alors il possède une source $x_2$. On réitère et l'énumeration $x_1, x_2, \dots, x_k$ est un tritopologique.
+				\\
+				$\leftarrow$ Si $D$ admet un tritopologique, il ne peut pas avoir de circuit
+			\end{proof}
+		\end{theorem}
+		
+		\subsubsection{Trouver un tritopologique depuis un DAG}
+		Pour trouver un tritopologique depuis un DAG $D$ on suit le même démarche que dans la preuve ci-dessus:\
+		Trouver un source quelconque $x_1$ de $D$. Répète avec $D \setminus \{x_1\}$ qui aura source $x_2$ et continue jusqu'à ce que $D$ soit vide. À la fin, l'énumeration $x_1, x_2, \dots,x_k$ est notre tritopologique.
+
+		\section{Plus courts chemins}
+
+		\subsection{Graphes Valués}
+		\begin{definition}{\textit{graphe valué}}
+			un \textit{graphe valué} peut se définir comme un graphe typique, mais avec un fonction $P \to \mathbb{R}^+$ qui spécifie le poids des arêtes
+		\end{definition}
+		\
+		Dans un \textit{graphe valué} on peut s'interesser aux chemins entre les sommets qui coûtent le moins.
+
+		\subsection{Algorithme de Dijkstra}
+
+		L'algorithme de Dijkstra sert à trouver des plus courts chemins dans des graphes valués ou \textbf{il n'y a pas d'arêtes avec un poids négatif.}
+
+		\begin{algorithmic}[1]
+			\FORALL{$v \in V$}
+				\STATE{$\text{distance}(v) \leftarrow \infty^+$}
+				\STATE{$\text{traité}(v) \leftarrow 0$}
+			\ENDFOR
+			\STATE{$\text{père}(r) \leftarrow 0, \text{distance}(r) \leftarrow 0$ // la racine}
+			\WHILE{$\exists x \in V$ tel que $\text{traité}(x) = 0$}
+				\STATE{Choisir un tel $x$ avec $\text{distance}(x)$ minimum}
+				\STATE{$\text{traité}(x) \leftarrow 1$}
+				\FORALL{$y \in N^+(x)$}
+					\IF{$\text{traité}(y) = 0 \land \text{distance}(y) > \text{distance}(x) + \text{poids}(xy)$}
+						\STATE{$\text{distance}(y) \leftarrow \text{distance}(x) + \text{poids}(xy)$}
+						\STATE{$\text{père}(y) \leftarrow x$}
+					\ENDIF
+				\ENDFOR
+			\ENDWHILE
+		\end{algorithmic}
+
+		En gros, ce qu'on fait, est de traiter un sommet à la fois en fonction de proximité de la racine. On gère un fonction de distances $x \in V \to \mathbb{R}^+$ d'où on prend la proximité. À chaque étape, quand on traite un sommet $x$, on regarde tous ses voisins non-traités et met à jour un voisin si le chemin du racine à ce voisin est plus court en allant par $x$. On suit le chemin avec un fonction père $x \in V \to y \in V$.
+
+		\subsection{Algorithme de Bellman-Ford}
+
+		Contrairement à l'algorithme de Dijkstra, cet algorithme peut trouver les plus courts chemins dans des graphes orientés \textit{avec des arêtes dont le poids est négatif}. Mais, dans ce cas, il peut y avoir des cycles orientés de poids négatif, et cet algorithme nous le dira.
+
+		Le complexité de cet alogrithme est $O(nm)$.
+		
+		\begin{algorithmic}[1]
+			\FORALL{$v \in V$}
+				\STATE{$\text{distance}(v) \leftarrow \infty^+$}
+			\ENDFOR
+			\STATE{$\text{père}(r) \leftarrow r, \text{distance}(r) \leftarrow 0$ //la racine}
+			\FORALL{$i \in \{1, 2, \dots , n\}$}
+				\FORALL{$uv \in A$}
+					\IF{$\text{distance}(v) > \text{distance}(u) + \text{poids}(uv)$}
+						\STATE{$\text{distance}(x) \leftarrow \text{distance}(u) + \text{poids}(uv)$}
+						\STATE{$\text{père}(v) \leftarrow u$}
+					\ENDIF
+				\ENDFOR
+			\ENDFOR
+			\STATE{//verifier qu'il n'y a pas de cycles orienté}
+			\FORALL{$uv \in A$}
+				\IF{$\text{distance}(v) > \text{distance}(u) + \text{poids}(uv)$}
+					\STATE{Return 'Il existe un cycle orienté de poids $<$ 0}
+				\ENDIF
+			\ENDFOR
+		\end{algorithmic}
+		
+		L'idée de cet algorithme est simple. On commence avec les distances à $\infty^+$. Puis, on itère sur \textit{toutes les arêtes} n fois (d'où le $O(nm)$). Et chaque fois que cet arête nous donne un raccourci, vers un sommet, on met à jour la distance de la racine à ce sommet.\\
+		Pour tester le présence d'un cycle de poids négatif, on teste, tout simplement s'il y a encore un raccourci.
+		\subsection{Algorithme de Floyd-Warshall}
+		Cet algorithme nous donne deux choses:
+		\begin{itemize}
+			\item une madrice $d : V \times V \to \mathbb{R}$ donnant la distance entre toutes paires de sommets $V$
+			\item une matrice $P : V \times V \to V$ dont $P[i][j]$ contient le début d'un plus court chemin de $i$ à $j$.
+		\end{itemize}
+		La complexité de cet algorithme est $O(n^3)$.
+		\begin{algorithmic}[1]
+			\STATE{//Initialization}
+			\FORALL{$i \in \{1 , \dots , n\}$}
+				\FORALL{$j \in \{1, 2, ..., n\}$}
+					\IF{$ij \in A$}
+						\STATE{$d[i][j] \leftarrow \text{poids}(ij), P[i][j] \leftarrow j$}
+					\ELSE
+						\STATE{$d[i][j] \leftarrow \infty^+, P[i][j] \leftarrow \emptyset$}
+					\ENDIF
+				\ENDFOR
+			\ENDFOR
+			\STATE{//le coeur de l'algorithme}
+			\FORALL{$i \in \{1, 2, \dots , n\}$}
+				\FORALL{$j \in \{1, 2, \dots , n\}$}
+					\FORALL{$k \in \{1, 2, \dots , n\}$}
+						\IF{$d[j][k] > d[j][i] + d[i][k]$}
+							\STATE{$d[j][k] \leftarrow d[j][i] + d[i][k]$ //$i$ est un raccourci pour aller de $j$ à $k$}
+							\STATE{$P[j][k] \leftarrow P[j][i]$}
+						\ENDIF
+					\ENDFOR
+				\ENDFOR
+			\ENDFOR
+			\FORALL{$i \in \{1, 2, \dots , n\}$}
+				\STATE{Return 'Il existe un cycle orienté de poids négatif}
+			\ENDFOR
+		\end{algorithmic}
+
+		\section{Resumé de tous les algorithmes}
+		\begin{tabularx}{\textwidth}{| X || X | X |}
+			\hline
+			\textbf{algorithme} & \textbf{objet} & \textbf{complexité}\\
+			\hline
+			\hline
+			\textbf{composante} & identifier les composantes connexes d'un graphe & \underline{simple} : $O(n^2)$ \underline{optimisé} : $O(m + n \log n)$\\
+			\hline
+			\textbf{arbre-couvrant} & trouver un arbre couvrant d'un graphe & \underline{simple} : $O(n^2)$ \underline{optimisé} : $O(m + n \log n)$ \\
+			\hline
+			\textbf{Kruskal} & trouver un arbre couvrant de poids minimum (APCM) d'un graphe & \underline{simple} : $O(n^2 + m \log n$, \underline{optimisé} : $O(m \log n)$ \\
+			\hline
+			\textbf{parcours-en-largeur} & parcourir un graphe par niveau, créer un arbre de plus courts chemins depuis une racine (dans un graphe non-valué) & $O(n + m)$ \\
+			\hline
+			\textbf{parcours-en-profondeur} & parcourir un graphe en allant aussi fond que possible & $O(n + m)$  \\
+			\hline
+			\textbf{Dijkstra} & créer un arbre de plus courts chemins depuis une racine (dans un graphe valué) & $O(m \log n)$ \\
+			\hline
+			\textbf{Bellman-Ford} & donner les distance à n'importe quel sommet depuis une racine dans un graphe orienté qui peut avoir des arcs de poids négatifs, ou indiquer qu'il y existe un cycle orienté de longeur négative & $O(nm)$ \\
+			\hline
+			\textbf{Floyd-Warshall} & trouver la distance/un plus court chemin entre toutes paire sde sommets d'un graphe, ou indiquer qu'il y existe un cycle orienté de longeur négative & $O(n^3)$ \\
+			\hline
+		\end{tabularx}
+				
+\end{document}
