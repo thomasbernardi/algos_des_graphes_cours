@@ -21,11 +21,13 @@ void pointRandom(int n, coord point[]) {
     point[i].ord = rand()%ORD;
   }
 }
+
 float distance(coord p1, coord p2) {
   int distance_squared = pow(abs(p1.abs - p2.abs), 2)
       + pow(abs(p1.ord - p2.ord), 2);
   return sqrt((float) distance_squared);
 }
+
 int voisins(int n, int dmax, coord point[], vector<int> voisin[]) {
   int nombredaretes = 0;
   for (int i = 0; i < n; i++) {
@@ -53,6 +55,35 @@ void voisins2arete(int n, vector<int> voisins[], int arete[][2]) {
     }
   }
 }
+
+void affichageGraphiquePere(int n, int m, coord point[], int pere[], string name) {
+  ofstream output;
+   output.open(name + ".ps",ios::out);
+   output << "%!PS-Adobe-3.0" << endl;
+   output << "%%BoundingBox: 0 0 612 792" << endl;
+   output << endl;
+   //sommets
+   for(int i=0;i<n;i++)
+     {output << point[i].abs << " " << point[i].ord << " 3 0 360 arc" <<endl;
+     output << "0 setgray" <<endl;
+     output << "fill" <<endl;
+     output << "stroke"<<endl;
+     output << endl;
+     }
+   output << endl;
+   //aretes
+   for(int i = 0; i < n; i++) {
+     output << point[i].abs << " " << point[i].ord
+  	   << " moveto" << endl;
+     output << point[pere[i]].abs << " " << point[pere[i]].ord
+  	  << " lineto" << endl;
+     output << "stroke" << endl;
+     output << endl;
+     }
+   output << "showpage";
+   output << endl;
+}
+
 void affichageGraphique(int n, int m, coord point[], int arete[][2], string name) {
   ofstream output;
    output.open(name + ".ps",ios::out);
@@ -87,27 +118,32 @@ void dijkstra(int n, vector<int> voisin[], coord point[], int pere[]) {
   bool traite[n];
   for (int i = 0; i < n; i++) {
     dist[i] = -1;
-    traite[n] = false;
+    traite[i] = false;
     pere[i] = -1;
   }
   pere[0] = 0;
   dist[0] = 0;
 
-  bool fini = false;
-  while(!fini) {
+  int nombretraite = 0;
+  while(nombretraite < n) {
     int x = 0;
     for (int i = 0; i < n; i++) {
-      if (traite[i] == false) {
-        if (traite[x] || dist[x] < -.5 || (dist[i] < dist[x] && dist[i] > -.5)) {
+      if (traite[x]) {
+        x = i;
+      }
+      if (!traite[i]) {
+        if (dist[x] < -.5 || (dist[i] < dist[x] && dist[i] > -.5)) {
           x = i;
         }
       }
     }
+    cout << x << " :: " << traite[x] << endl;
     traite[x] = true;
+    nombretraite++;
     for (int i = 0; i < voisin[x].size(); i++) {
       int y = voisin[x][i];
       if (!traite[y] &&
-          (dist[y] == -1 ||
+          (dist[y] < -.5 ||
           dist[y] > dist[x] + distance(point[x], point[y])) ) {
         dist[y] = dist[x] + distance(point[x], point[y]);
         pere[y] = x;
@@ -115,7 +151,7 @@ void dijkstra(int n, vector<int> voisin[], coord point[], int pere[]) {
     }
   }
 }
-int construireArbre(int n,int arbre[][2],int pere[]) {
+int construireArbre(int n,int arbre[][2], int pere[]) {
   //on commence avec 1 car on sait que pere[0] == 0
   int nombredaretes = 0;
   for (int i = 1; i < n; i++) {
@@ -142,12 +178,11 @@ void print_arbre(int m, int arbre[][2]) {
   }
 }
 int
-main()
-{
+main() {
   int n;                           // Le nombre de points.
   cout << "Entrer le nombre de points: ";
   cin >> n;
-  int dmax=250;                     // La distance jusqu'a laquelle on relie deux points.
+  int dmax=50;                     // La distance jusqu'a laquelle on relie deux points.
   coord point[N];                  // Les coordonnees des points.
   vector<int> voisin[N];           // Les listes de voisins.
   int arbre[N-1][2];               // Les aretes de l'arbre de Dijkstra.
@@ -155,13 +190,14 @@ main()
   int m;                           // Le nombre d'aretes
   pointRandom(n, point);
   m = voisins(n, dmax, point, voisin);
-  cout << "m: " << m;
+  cout << "m: " << m << endl;
   int arete[M][2];                 // Les aretes du graphe
   voisins2arete(n, voisin, arete);
   affichageGraphique(n, m, point, arete, "graphe");
   dijkstra(n, voisin, point, pere);
   int nombredaretes = construireArbre(n, arbre, pere);
+  cout << nombredaretes << endl;
   print_arbre(nombredaretes, arbre);
-  affichageGraphique(n, nombredaretes, point, arbre, "arbre");
+  affichageGraphiquePere(n, nombredaretes, point, pere, "arbre");
   return EXIT_SUCCESS;
 }
